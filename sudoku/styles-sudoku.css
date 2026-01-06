@@ -1,0 +1,732 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* pin to top so container scrolling is natural */
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 12px;
+}
+
+.container {
+    background: white;
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    /* allow the page (body) to scroll when content grows; avoid internal container clipping */
+    max-height: none;
+    overflow: visible;
+}
+
+h1 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 6px;
+    font-size: 28px;
+}
+
+.subtitle {
+    color: #666;
+    text-align: center;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.game-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px; /* tightened gap to reduce vertical spacing */
+    align-items: stretch;
+    /* take remaining vertical space inside container */
+    flex: 1 1 auto;
+}
+    .top-bar {
+        grid-column: 1 / -1; /* span full width so controls sit above the columns */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 6px 6px; /* reduced padding to bring buttons closer to header */
+    }
+    /* tutorial toggle placed next to difficulty controls */
+    .top-bar .tutorial-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: 8px;
+    }
+
+.difficulty-controls-left {
+    display: flex;
+    justify-content: center;
+    align-items: start;
+    padding-top: 6px;
+}
+
+.difficulty-controls-left .btn-secondary,
+.difficulty-controls-left .btn-primary,
+.difficulty-controls-left .btn-danger {
+    width: 100px;
+}
+
+/* Active difficulty button */
+.difficulty-controls-left button.active {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102,126,234,0.18);
+    outline: 3px solid rgba(102,126,234,0.12);
+}
+
+/* Highlight matching numbers when a cell with a value is clicked */
+.sudoku-cell.match {
+    /* Make matching cells solid purple with white text so they jump out */
+    background: #667eea;
+    color: #fff;
+    font-weight: 800;
+    box-shadow: 0 6px 18px rgba(102,126,234,0.22);
+}
+
+/* If a given cell is also a match, ensure the purple override applies */
+.sudoku-cell.given.match {
+    background: #667eea;
+    color: #fff;
+}
+
+/* Keep selected appearance slightly stronger */
+.sudoku-cell.selected {
+    background: #4b5fd6;
+    color: white;
+}
+
+.side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.board-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1 1 auto;
+    overflow: auto; /* allow board to shrink with its own scrolling if needed */
+    padding: 6px;
+}
+
+/* Board with axis labels */
+.board-with-axes {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: min(86vmin, 640px);
+}
+
+/* Page header: center title, keep tutorial toggle at right on wide screens */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* center title */
+    gap: 12px;
+    position: relative; /* allow absolute toggle */
+}
+.page-header > div:first-child {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* center the title and subtitle */
+}
+.page-header .tutorial-toggle {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+@media (max-width: 900px) {
+    .page-header { justify-content: center; }
+    .page-header .tutorial-toggle { position: static; transform: none; margin-left: 10px; }
+}
+.col-labels {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 0;
+    margin-left: 36px; /* reserve space for row labels */
+    color: rgba(0,0,0,0.45);
+    font-weight: 700;
+    font-size: 12px;
+    text-align: center;
+    user-select: none;
+}
+.row-and-board {
+    display: flex;
+    gap: 6px;
+}
+.row-labels {
+    display: grid;
+    grid-template-rows: repeat(9, 1fr);
+    gap: 0;
+    width: 36px;
+    color: rgba(0,0,0,0.45);
+    font-weight: 700;
+    font-size: 12px;
+    align-items: center;
+    text-align: center;
+    user-select: none;
+}
+.row-labels span, .col-labels span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.sudoku-board {
+    width: 100%;
+    /* enlarge board slightly and make it stand out more */
+    max-width: min(86vmin, 640px);
+    /* keep board square */
+    aspect-ratio: 1 / 1;
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 0;
+    border: 4px solid #222;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    box-sizing: border-box;
+}
+
+.sudoku-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #ccc;
+    /* increase digit sizing to match larger board */
+    font-size: clamp(14px, 3.9vmin, 30px);
+    font-weight: 700;
+    cursor: pointer;
+    background: white;
+    color: #333;
+    transition: all 0.12s ease;
+    user-select: none;
+}
+
+.sudoku-cell:hover {
+    background: #f0f0f0;
+}
+
+.sudoku-cell.given {
+    background: #e8e8e8;
+    cursor: default;
+    color: #000;
+    font-weight: 900;
+}
+
+.sudoku-cell.given:hover {
+    background: #e8e8e8;
+}
+
+.sudoku-cell.selected {
+    background: #667eea;
+    color: white;
+}
+
+.sudoku-cell.correct {
+    background: #d4edda;
+    color: #155724;
+}
+
+.sudoku-cell.incorrect {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* visual marker for cells that conflict with a recent wrong placement */
+.sudoku-cell.conflict {
+    box-shadow: inset 0 0 0 3px rgba(220,53,69,0.18);
+}
+
+.sudoku-cell.hint {
+    background: #cfe2ff;
+    color: #084298;
+}
+
+/* Grid borders: draw thin internal lines using top/left borders,
+   and thicker separators for 3x3 boxes using right/bottom borders.
+   To avoid double-thickness, we remove the adjacent thin border where needed. */
+
+.sudoku-cell {
+    /* default: thin separators between cells (top and left) */
+    border-top: 1px solid #ccc;
+    border-left: 1px solid #ccc;
+}
+
+/* Remove top border for first row and left border for first column (outer container provides thick border) */
+.sudoku-cell:nth-child(-n + 9) { /* first row */
+    border-top: none;
+}
+.sudoku-cell:nth-child(9n + 1) { /* first column */
+    border-left: none;
+}
+
+/* Thicker vertical separators after column 3 and 6 (cells in columns 3 and 6) */
+.sudoku-cell:nth-child(9n + 3),
+.sudoku-cell:nth-child(9n + 6) {
+    border-right: 3px solid #333;
+}
+/* Remove the thin left border on the column following a thick vertical separator to avoid visual doubling */
+.sudoku-cell:nth-child(9n + 4),
+.sudoku-cell:nth-child(9n + 7) {
+    border-left: none;
+}
+
+/* Thicker horizontal separators after row 3 and 6: rows end at cells 19-27 and 46-54 */
+.sudoku-cell:nth-child(n + 19):nth-child(-n + 27),
+.sudoku-cell:nth-child(n + 46):nth-child(-n + 54) {
+    border-bottom: 3px solid #333;
+}
+/* Remove the thin top border on the row following a thick horizontal separator */
+.sudoku-cell:nth-child(n + 28):nth-child(-n + 36),
+.sudoku-cell:nth-child(n + 55):nth-child(-n + 63) {
+    border-top: none;
+}
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+    border: 2px solid #e0e0e0;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #218838;
+    transform: translateY(-2px);
+}
+
+.status-message {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 9999;
+    text-align: left;
+    padding: 12px 18px;
+    border-radius: 8px;
+    display: none;
+    min-width: 220px;
+    max-width: 360px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    font-weight: 600;
+    animation: slideIn 0.28s ease;
+}
+
+.status-message.show {
+    display: block;
+    opacity: 1;
+}
+
+.status-message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-message.info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 0;
+    padding: 12px;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.stat-value {
+    color: #667eea;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.keyboard {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+@media (min-width: 900px) {
+    .game-grid {
+        /* left column (small), center column (board), right column (side-panel) */
+        grid-template-columns: 160px minmax(480px, 1fr) 320px;
+    }
+    .top-bar {
+        grid-column: 1 / -1; /* span full width so controls sit above the columns */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        padding: 12px 6px;
+    }
+    .side-panel {
+        padding-left: 12px;
+        max-height: 100%;
+        overflow: auto;
+    }
+    /* Ensure the board uses all available left column space and remains square */
+    .sudoku-board {
+        max-width: 100%;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1 / 1;
+    }
+    /* Place main content into columns: board in center, side-panel in right column */
+    .board-container { grid-column: 2 / 3; }
+    .side-panel { grid-column: 3 / 4; }
+    /* Place difficulty controls into the left column on desktop */
+    .difficulty-controls-left {
+        grid-column: 1 / 2;
+        align-self: start;
+        display: flex;
+        flex-direction: column; /* stack vertically on wide screens */
+        justify-content: flex-start;
+        gap: 6px;
+        padding-top: 2px; /* reduce spacing above buttons */
+    }
+
+    /* ensure inner row stays centered when stacked */
+    .difficulty-controls-left .difficulty-inner {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+        width: auto;
+    }
+
+    /* center the toggle beneath the buttons in the left column */
+    .difficulty-controls-left .tutorial-toggle {
+        align-self: center;
+        margin-left: 0;
+    }
+}
+
+/* On narrower screens make the difficulty controls + toggle inline (horizontal) */
+@media (max-width: 899px) {
+    .difficulty-controls-left {
+        grid-column: 1 / -1; /* span full width */
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding-top: 0;
+    }
+    .difficulty-controls-left .difficulty-inner {
+        flex-direction: row;
+        gap: 10px;
+    }
+    .difficulty-controls-left .tutorial-toggle {
+        margin-left: 6px;
+    }
+}
+
+
+
+/* Mobile: show difficulty buttons in a single row and move info collapse behavior */
+@media (max-width: 700px) {
+    .difficulty-controls-left {
+        padding-top: 0;
+        align-items: center;
+    }
+    .difficulty-controls-left > div {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .difficulty-controls-left button {
+        width: auto !important;
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+    /* place tutorial toggle above board already handled in HTML; ensure it's centered */
+    .tutorial-above { order: -1; }
+    /* scale board down to fit mobile viewport */
+    .sudoku-board {
+        max-width: calc(100vw - 48px);
+    }
+    .col-labels {
+        margin-left: 36px;
+        font-size: 11px;
+    }
+    .row-labels { width: 28px; font-size:11px; }
+
+    /* make the top bar layout horizontal and compact */
+    .top-bar {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 6px;
+    }
+
+    /* sticky keypad at bottom for easier thumb reach */
+    .keyboard {
+        position: sticky;
+        bottom: 8px;
+        z-index: 999;
+        background: rgba(255,255,255,0.95);
+        padding: 8px;
+        border-radius: 8px;
+        box-shadow: 0 -6px 20px rgba(0,0,0,0.08);
+    }
+}
+
+.num-btn {
+    padding: 8px;
+    background: #f0f0f0;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.num-btn:hover {
+    /* subtle hover to avoid stealing focus from the board */
+    background: #e9ecef;
+    color: #222;
+    border-color: #e0e0e0;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+}
+
+.num-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+    background: #f8f9fa;
+    color: #999;
+    border-color: #e9ecef;
+}
+
+.highlight-reset {
+    box-shadow: 0 8px 20px rgba(220,53,69,0.22);
+    outline: 3px solid rgba(220,53,69,0.12);
+    transform: translateY(-2px);
+}
+
+.num-btn.clear {
+    grid-column: span 1;
+}
+
+.num-count {
+    position: absolute;
+    right: 6px;
+    bottom: 4px;
+    background: rgba(0,0,0,0.06);
+    color: #222;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.info-box {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 12px;
+    border-radius: 6px;
+    color: #856404;
+
+}
+
+.info-box.moved-left {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 8px;
+    border-radius: 6px;
+    color: #856404;
+    font-size: 13px;
+}
+
+/* Slider switch for tutorial toggle */
+.switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+.switch input { display:none; }
+.switch .slider {
+    width: 44px;
+    height: 22px;
+    background: #ccc;
+    border-radius: 22px;
+    display: inline-block;
+    position: relative;
+    transition: background 0.2s ease;
+}
+.switch .slider:before {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.18s ease;
+}
+.switch input:checked + .slider {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+.switch input:checked + .slider:before {
+    transform: translateX(22px);
+}
+
+/* Icon-only tutorial toggle styling */
+.tutorial-toggle.icon-only { display:flex; align-items:center; }
+.icon-switch { display:inline-flex; align-items:center; gap:8px; }
+.icon-switch .slider { width: 38px; height: 20px; }
+.tutorial-icon {
+    font-size: 18px;
+    line-height: 1;
+    display:inline-block;
+    margin-left: 8px;
+    color: #333;
+}
+/* remove textual label when icon-only is used */
+.tutorial-toggle.icon-only .tutorial-label { display:none !important; }
+
+/* Slightly tighten spacing in top-bar when icon-only toggle present */
+.top-bar .tutorial-toggle.icon-only { margin-left: 6px; }
+
+/* Tutorial panel: persistent explanations when Tutorial Mode is enabled */
+.tutorial-panel {
+    background: #ffffff;
+    border: 1px solid #e9ecef;
+    padding: 10px;
+    border-radius: 8px;
+    min-height: 80px;
+    max-height: 200px;
+    overflow: auto;
+    box-shadow: 0 6px 18px rgba(102,126,234,0.06);
+    color: #222;
+}
+.tutorial-title {
+    font-weight: 800;
+    color: #333;
+    margin-bottom: 6px;
+}
+.tutorial-content {
+    font-size: 13px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+}
+
+.tutorial-content.info {
+    color: #0c5460;
+}
+.tutorial-content.error {
+    color: #721c24;
+}
+.tutorial-content.success {
+    color: #155724;
+}
+    font-size: 13px;
+    line-height: 1.5;
+    margin-top: 15px;
+}
