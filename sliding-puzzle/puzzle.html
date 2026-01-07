@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sliding Puzzle — 4x4</title>
+  <link rel="stylesheet" href="styles-sliding.css">
+</head>
+<body>
+  <main class="container">
+    <h1>Sliding Puzzle (4×4)</h1>
+
+    <section class="controls">
+      <div class="controls-left">
+        <label class="players-label">Players: <input id="playerCount" type="number" min="1" max="6" value="1"></label>
+        <button id="shuffleAll" class="btn-primary">Shuffle</button>
+      </div>
+    </section>
+
+    <section id="playersContainer" class="players-container"></section>
+
+    <p class="note">Each player has an independent board, move counter, and timer.</p>
+  </main>
+
+  <script src="script-sliding.js"></script>
+</body>
+</html>
