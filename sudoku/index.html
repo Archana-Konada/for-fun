@@ -25,16 +25,20 @@
 
             <div class="difficulty-controls-left">
                 <div class="difficulty-inner">
-                    <button id="btn-easy" class="btn-secondary">Easy</button>
-                    <button id="btn-medium" class="btn-primary">Medium</button>
-                    <button id="btn-hard" class="btn-danger">Hard</button>
+                    <button id="btn-easy" class="btn-secondary"><span class="btn-label">Easy</span></button>
+                    <button id="btn-medium" class="btn-primary"><span class="btn-label">Medium</span></button>
+                    <button id="btn-hard" class="btn-danger"><span class="btn-label">Hard</span></button>
+                    <button id="btn-hardest" class="btn-success"><span class="btn-label">Hardest</span></button>
                 </div>
-                <div class="tutorial-toggle icon-only" title="Tutorial Mode">
-                    <label class="switch icon-switch" title="Tutorial Mode">
-                        <input id="tutorialToggle" type="checkbox" aria-label="Tutorial Mode">
-                        <span class="slider"></span>
-                        <span class="tutorial-icon" aria-hidden="true">🎓</span>
-                    </label>
+                <div style="margin-top:8px;display:flex;gap:8px;align-items:center;justify-content:center;">
+                    <button id="btn-randomize-icons" class="icon-only" type="button" title="Pick random icon set" aria-label="Randomize icons">🎲</button>
+                    <div class="tutorial-toggle icon-only" title="Tutorial Mode">
+                        <label class="switch icon-switch" title="Tutorial Mode">
+                            <input id="tutorialToggle" type="checkbox" aria-label="Tutorial Mode">
+                            <span class="slider"></span>
+                            <span class="tutorial-icon" aria-hidden="true">🎓</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -90,15 +94,15 @@
                 </div>
 
                 <div class="keyboard">
-                    <button class="num-btn" onclick="placeNumber(1)"><span class="num-label">1</span><span class="num-count" id="count-1">9</span></button>
-                    <button class="num-btn" onclick="placeNumber(2)"><span class="num-label">2</span><span class="num-count" id="count-2">9</span></button>
-                    <button class="num-btn" onclick="placeNumber(3)"><span class="num-label">3</span><span class="num-count" id="count-3">9</span></button>
-                    <button class="num-btn" onclick="placeNumber(4)"><span class="num-label">4</span><span class="num-count" id="count-4">9</span></button>
-                    <button class="num-btn" onclick="placeNumber(5)"><span class="num-label">5</span><span class="num-count" id="count-5">9</span></button>
-                    <button class="num-btn" onclick="placeNumber(6)"><span class="num-label">6</span><span class="num-count" id="count-6">9</span></button>
-                    <button class="num-btn" onclick="placeNumber(7)"><span class="num-label">7</span><span class="num-count" id="count-7">9</span></button>
-                    <button class="num-btn" onclick="placeNumber(8)"><span class="num-label">8</span><span class="num-count" id="count-8">9</span></button>
-                    <button class="num-btn" onclick="placeNumber(9)"><span class="num-label">9</span><span class="num-count" id="count-9">9</span></button>
+                    <button class="num-btn" onclick="placeNumber(1)"><span class="num-label">1</span><span class="num-icon" aria-hidden="true">🐶</span><span class="num-count" id="count-1">9</span></button>
+                    <button class="num-btn" onclick="placeNumber(2)"><span class="num-label">2</span><span class="num-icon" aria-hidden="true">🐱</span><span class="num-count" id="count-2">9</span></button>
+                    <button class="num-btn" onclick="placeNumber(3)"><span class="num-label">3</span><span class="num-icon" aria-hidden="true">🐭</span><span class="num-count" id="count-3">9</span></button>
+                    <button class="num-btn" onclick="placeNumber(4)"><span class="num-label">4</span><span class="num-icon" aria-hidden="true">🐹</span><span class="num-count" id="count-4">9</span></button>
+                    <button class="num-btn" onclick="placeNumber(5)"><span class="num-label">5</span><span class="num-icon" aria-hidden="true">🐰</span><span class="num-count" id="count-5">9</span></button>
+                    <button class="num-btn" onclick="placeNumber(6)"><span class="num-label">6</span><span class="num-icon" aria-hidden="true">🦊</span><span class="num-count" id="count-6">9</span></button>
+                    <button class="num-btn" onclick="placeNumber(7)"><span class="num-label">7</span><span class="num-icon" aria-hidden="true">🐻</span><span class="num-count" id="count-7">9</span></button>
+                    <button class="num-btn" onclick="placeNumber(8)"><span class="num-label">8</span><span class="num-icon" aria-hidden="true">🐼</span><span class="num-count" id="count-8">9</span></button>
+                    <button class="num-btn" onclick="placeNumber(9)"><span class="num-label">9</span><span class="num-icon" aria-hidden="true">🐨</span><span class="num-count" id="count-9">9</span></button>
                     <button class="num-btn clear" onclick="clearCell()">Clear</button>
                 </div>
 

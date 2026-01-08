@@ -8,6 +8,65 @@ let strikes = 0;
 let maxStrikes = 3;
 let locked = false; // when true, player must reset to continue
 
+// ICON_MAP will be assigned per-game from one of ICON_SETS (keeps logic numeric)
+let ICON_MAP = {};
+
+// Predefined icon sets (each array must have 9 symbols)
+const ICON_SETS = [
+    // Animals
+    ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨'],
+    // Shapes (distinct geometric symbols)
+    ['▲','▼','◆','◇','◯','●','■','□','✶'],
+    // Food
+    ['🍎','🍊','🍋','🍇','🍓','🍉','🍒','🫐','🍍'],
+    // Transport
+    ['🚗','🚕','🚙','🚌','🚎','🚓','🚑','🚒','🚲'],
+    // Faces (more varied expressions and characters)
+    ['😀','😁','😅','🤓','🥳','🤠','🤖','🤩','🤗'],
+    // Nature
+    ['🌿','🌸','🌻','🌼','🌙','⭐','🔥','💧','🍁']
+    ,
+    // Sports
+    ['⚽','🏀','🏈','🎾','🏐','🏉','🥏','🏓','🏸'],
+    // Weather
+    ['☀️','⛅','☁️','🌧️','⛈️','🌩️','🌨️','🌤️','🌪️'],
+    // Music
+    ['🎵','🎶','🎸','🎺','🎻','🥁','🎷','📯','🪕'],
+    // Sea
+    ['🐟','🐠','🐬','🐳','🦈','🐙','🦀','🦐','🦑'],
+    // Objects
+    ['📦','🎁','📱','💡','🔑','📚','🖊️','⌚','🔋']
+];
+
+// Friendly labels for the UI select control (must match ICON_SETS order)
+const ICON_SET_NAMES = ['Animals','Shapes','Food','Transport','Faces','Nature','Sports','Weather','Music','Sea','Objects'];
+
+// index of currently chosen icon set, or null to auto-pick per-game
+let currentIconSetIndex = null;
+
+function applyIconSet(index, persist = true) {
+    if (typeof index !== 'number' || index < 0 || index >= ICON_SETS.length) return;
+    const chosen = ICON_SETS[index];
+    ICON_MAP = {};
+    for (let i = 1; i <= 9; i++) ICON_MAP[i] = chosen[i-1];
+
+    // update keypad icons to match chosen set
+    for (let d = 1; d <= 9; d++) {
+        const btn = document.getElementById(`count-${d}`)?.closest('button');
+        if (btn) {
+            const span = btn.querySelector('.num-icon');
+            if (span) span.textContent = ICON_MAP[d] || '';
+        }
+    }
+    // persist preference only when requested
+    if (persist) {
+        try { localStorage.setItem('sudokuIconSet', String(index)); } catch (e) {}
+        currentIconSetIndex = index;
+    }
+    // re-render board to apply icons if icon-mode is active
+    renderBoard();
+}
+
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -79,6 +138,7 @@ function createPuzzleFromSolution(sol, difficulty) {
     let removals = 45; // medium default
     if (difficulty === 'easy') removals = 35;
     if (difficulty === 'hard') removals = 55;
+    if (difficulty === 'hardest') removals = 60;
 
     let removed = 0;
     while (removed < removals) {
@@ -97,6 +157,12 @@ function initGame(difficulty = 'medium') {
     hintsUsed = 0;
     selectedCell = null;
     historyStack = [];
+    // choose icon set: use user selection if set, otherwise pick random for this game
+    let chosenIndex = currentIconSetIndex;
+    if (chosenIndex === null) chosenIndex = Math.floor(Math.random() * ICON_SETS.length);
+    // do not overwrite user's saved preference during auto-selection (persist=false)
+    applyIconSet(chosenIndex, false);
+
     solutionBoard = generateFullSolution();
     const puzzle = createPuzzleFromSolution(solutionBoard, difficulty);
     originalBoard = puzzle.map(row => [...row]);
@@ -110,6 +176,7 @@ function initGame(difficulty = 'medium') {
 function renderBoard() {
     const boardElement = document.querySelector('.sudoku-board');
     boardElement.innerHTML = '';
+    const iconMode = document.querySelector('.game-grid')?.classList.contains('icon-mode');
 
     for (let row = 0; row < 9; row++) {
         for (let col = 0; col < 9; col++) {
@@ -117,13 +184,21 @@ function renderBoard() {
             cell.className = 'sudoku-cell';
             cell.id = `cell-${row}-${col}`;
 
-            const value = sudokuBoard[row][col];
-
-            if (originalBoard[row][col] !== 0) {
-                cell.classList.add('given');
-                cell.textContent = value || '';
+            const rowArr = sudokuBoard && sudokuBoard[row];
+            const origRow = originalBoard && originalBoard[row];
+            const value = (rowArr && typeof rowArr[col] !== 'undefined') ? rowArr[col] : 0;
+            const isGiven = Boolean(origRow && origRow[col] && origRow[col] !== 0);
+            if (isGiven) cell.classList.add('given');
+            // store numeric value for accessibility and internal use
+            cell.dataset.digit = value || '';
+            cell.title = value ? String(value) : '';
+            if (value && iconMode) {
+                cell.textContent = ICON_MAP[value] || '';
+                // keep a visually-hidden numeric label for screen readers if needed
+                cell.setAttribute('aria-label', `Digit ${value}`);
             } else {
                 cell.textContent = value || '';
+                cell.removeAttribute('aria-label');
             }
             // attach click handler for all cells to support matching-number highlights
             cell.addEventListener('click', () => onCellClick(row, col, cell));
@@ -215,7 +290,8 @@ function placeNumber(num) {
     historyStack.push({ type: 'place', row: selectedCell.row, col: selectedCell.col, prev });
     sudokuBoard[selectedCell.row][selectedCell.col] = num;
     const cell = document.getElementById(`cell-${selectedCell.row}-${selectedCell.col}`);
-    if (cell) cell.textContent = num;
+    const iconMode = document.querySelector('.game-grid')?.classList.contains('icon-mode');
+    if (cell) cell.textContent = iconMode ? (ICON_MAP[num] || num) : num;
 
     // Validate and show visual feedback
     const validation = validateCell(selectedCell.row, selectedCell.col);
@@ -365,7 +441,8 @@ function getHint() {
     sudokuBoard[row][col] = hint;
     const cell = document.getElementById(`cell-${row}-${col}`);
     if (cell) {
-        cell.textContent = hint;
+        const iconMode = document.querySelector('.game-grid')?.classList.contains('icon-mode');
+        cell.textContent = iconMode ? (ICON_MAP[hint] || hint) : hint;
         cell.classList.add('hint');
     }
     hintsUsed++;
@@ -475,17 +552,53 @@ window.addEventListener('DOMContentLoaded', () => {
     const btnEasy = document.getElementById('btn-easy');
     const btnMedium = document.getElementById('btn-medium');
     const btnHard = document.getElementById('btn-hard');
+    const btnHardest = document.getElementById('btn-hardest');
+
+    // load saved icon preference (must be done before initGame so init uses it)
+    const savedIcon = (() => {
+        try { return localStorage.getItem('sudokuIconSet'); } catch (e) { return null; }
+    })();
+    if (savedIcon !== null) {
+        if (savedIcon === 'auto') {
+            currentIconSetIndex = null;
+        } else {
+            const idx = parseInt(savedIcon, 10);
+            if (!isNaN(idx) && idx >= 0 && idx < ICON_SETS.length) {
+                currentIconSetIndex = idx;
+            }
+        }
+    }
 
     function setActiveDifficulty(level) {
-        [btnEasy, btnMedium, btnHard].forEach(b => b.classList.remove('active'));
-        if (level === 'easy') btnEasy.classList.add('active');
-        if (level === 'medium') btnMedium.classList.add('active');
-        if (level === 'hard') btnHard.classList.add('active');
+        [btnEasy, btnMedium, btnHard, btnHardest].forEach(b => b.classList.remove('active'));
+        const grid = document.querySelector('.game-grid');
+        if (level === 'easy') {
+            btnEasy.classList.add('active');
+            grid.classList.remove('icon-mode');
+        }
+        if (level === 'medium') {
+            btnMedium.classList.add('active');
+            grid.classList.remove('icon-mode');
+        }
+        if (level === 'hard') {
+            btnHard.classList.add('active');
+            grid.classList.remove('icon-mode');
+        }
+        if (level === 'hardest') {
+            btnHardest.classList.add('active');
+            grid.classList.add('icon-mode');
+        }
+        // show only the small randomizer button when Hardest is active; tutorial toggle stays put
+        const randomBtn = document.getElementById('btn-randomize-icons');
+        if (randomBtn) randomBtn.style.display = grid.classList.contains('icon-mode') ? 'inline-flex' : 'none';
+        // ensure visual rendering updates immediately when mode changes
+        renderBoard();
     }
 
     btnEasy.addEventListener('click', () => { setActiveDifficulty('easy'); initGame('easy'); });
     btnMedium.addEventListener('click', () => { setActiveDifficulty('medium'); initGame('medium'); });
     btnHard.addEventListener('click', () => { setActiveDifficulty('hard'); initGame('hard'); });
+    if (btnHardest) btnHardest.addEventListener('click', () => { setActiveDifficulty('hardest'); initGame('hardest'); });
 
     // initialize with medium active
     setActiveDifficulty('medium');
@@ -521,6 +634,12 @@ window.addEventListener('DOMContentLoaded', () => {
     if (tutorialToggleCheck) {
         // nothing extra needed; keeping reference ensures element exists
     }
+    // wire up icon set selector and randomize button
+    const randomizeBtn = document.getElementById('btn-randomize-icons');
+    if (randomizeBtn) randomizeBtn.addEventListener('click', () => {
+        const idx = Math.floor(Math.random() * ICON_SETS.length);
+        applyIconSet(idx, true);
+    });
 });
 
 // Undo last action
@@ -536,7 +655,8 @@ function undo() {
         sudokuBoard[row][col] = prev;
         const el = document.getElementById(`cell-${row}-${col}`);
         if (el) {
-            el.textContent = prev === 0 ? '' : prev;
+            const iconMode = document.querySelector('.game-grid')?.classList.contains('icon-mode');
+            el.textContent = prev === 0 ? '' : (iconMode ? (ICON_MAP[prev] || prev) : prev);
             el.classList.remove('correct', 'incorrect', 'hint', 'match');
             // re-validate cell if it has a value
             if (prev !== 0) validateCell(row, col);
@@ -558,7 +678,8 @@ function undo() {
             sudokuBoard[ch.row][ch.col] = ch.prev;
             const el = document.getElementById(`cell-${ch.row}-${ch.col}`);
             if (el) {
-                el.textContent = ch.prev === 0 ? '' : ch.prev;
+                const iconMode = document.querySelector('.game-grid')?.classList.contains('icon-mode');
+                el.textContent = ch.prev === 0 ? '' : (iconMode ? (ICON_MAP[ch.prev] || ch.prev) : ch.prev);
                 el.classList.remove('correct', 'incorrect', 'hint', 'match');
                 if (ch.prev !== 0) validateCell(ch.row, ch.col);
             }
