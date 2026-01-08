@@ -53,6 +53,126 @@ function isSolvable(arr){
   }
 }
 
+// Solver: IDA* (iterative deepening A*) using Manhattan distance heuristic.
+function solvePuzzle(startArr, maxNodes=500000){
+  const size = startArr.length
+  const width = Math.sqrt(size)
+  const goalArr = Array.from({length:size},(_,i)=> i< size-1 ? i+1 : 0)
+
+  function manhattan(arr){
+    let sum = 0
+    for(let i=0;i<size;i++){
+      const v = arr[i]
+      if(v===0) continue
+      const goalIndex = v-1
+      const r1 = Math.floor(i/width), c1 = i%width
+      const r2 = Math.floor(goalIndex/width), c2 = goalIndex%width
+      sum += Math.abs(r1-r2)+Math.abs(c1-c2)
+    }
+    return sum
+  }
+
+  // linear conflict: for each row/column, count pairs of tiles in the same line that are in each other's way
+  function linearConflict(arr){
+    let conflicts = 0
+    // rows
+    for(let r=0;r<width;r++){
+      const tiles = []
+      for(let c=0;c<width;c++){
+        const idx = r*width + c
+        const v = arr[idx]
+        if(v===0) continue
+        const goalIndex = v-1
+        const gr = Math.floor(goalIndex/width), gc = goalIndex%width
+        if(gr === r) tiles.push({curC: c, goalC: gc})
+      }
+      for(let i=0;i<tiles.length;i++) for(let j=i+1;j<tiles.length;j++) if(tiles[i].goalC > tiles[j].goalC) conflicts++
+    }
+    // columns
+    for(let c=0;c<width;c++){
+      const tiles = []
+      for(let r=0;r<width;r++){
+        const idx = r*width + c
+        const v = arr[idx]
+        if(v===0) continue
+        const goalIndex = v-1
+        const gr = Math.floor(goalIndex/width), gc = goalIndex%width
+        if(gc === c) tiles.push({curR: r, goalR: gr})
+      }
+      for(let i=0;i<tiles.length;i++) for(let j=i+1;j<tiles.length;j++) if(tiles[i].goalR > tiles[j].goalR) conflicts++
+    }
+    return conflicts
+  }
+
+  function heuristic(arr){
+    return manhattan(arr) + 2 * linearConflict(arr)
+  }
+
+  // Mutable copy of board for in-place moves
+  const board = startArr.slice()
+  let blankIdx = board.indexOf(0)
+
+  // possible moves: offset and a guard function for validity
+  const moves = [
+    {off:-width, check: i => Math.floor(i/width) > 0}, // up
+    {off:width,  check: i => Math.floor(i/width) < width-1}, // down
+    {off:-1, check: i => (i%width) > 0}, // left
+    {off:1,  check: i => (i%width) < width-1} // right
+  ]
+
+  let nodes = 0
+  const path = [] // tile values moved
+  const maxNodesLocal = maxNodes
+
+  function dfs(g, threshold, prevMoveOff){
+    nodes++
+    if(nodes > maxNodesLocal) return {cutoff: 'limit', partial: path.slice()}
+    const h = heuristic(board)
+    const f = g + h
+    if(h === 0) return {found: true}
+    if(f > threshold) return {min: f}
+
+    let minNext = Infinity
+    // try moves in order (can be tuned)
+    for(const m of moves){
+      const off = m.off
+      if(!m.check(blankIdx)) continue
+      // avoid reversing the previous move
+      if(prevMoveOff !== undefined && prevMoveOff === -off) continue
+      const ti = blankIdx + off
+      const tileVal = board[ti]
+      // apply
+      board[blankIdx] = tileVal
+      board[ti] = 0
+      const oldBlank = blankIdx
+      blankIdx = ti
+      path.push(tileVal)
+
+      const res = dfs(g+1, threshold, off)
+      if(res && res.found) return {found: true}
+      if(res && res.cutoff === 'limit') return {cutoff: 'limit', partial: res.partial}
+      if(res && res.min !== undefined){ if(res.min < minNext) minNext = res.min }
+
+      // undo
+      path.pop()
+      board[ti] = tileVal
+      board[oldBlank] = 0
+      blankIdx = oldBlank
+    }
+    return {min: minNext}
+  }
+
+  let threshold = heuristic(board)
+  if(threshold === 0) return {path: []}
+  while(true){
+    const res = dfs(0, threshold, undefined)
+    if(res && res.found) return {path: path.slice()}
+    if(res && res.cutoff === 'limit') return {error: 'limit', partial: res.partial || path.slice()}
+    if(!res || res.min === Infinity) return {error: 'nosol'}
+    threshold = res.min
+  }
+}
+
 function generateShuffle(){
   const arr = Array.from({length:16},(_,i)=>i)
   // Fisher-Yates
@@ -92,6 +212,13 @@ class PlayerBoard{
       </div>
       <div class="board-wrap">
         <div class="board"></div>
+        <div class="help-panel">
+          <div class="help-actions">
+            <button class="btn-scrabble btn-hint">Hint</button>
+            <button class="btn-scrabble btn-solve">Solve Steps</button>
+          </div>
+          <div class="help-box"></div>
+        </div>
       </div>
       <div class="result"></div>
     `
@@ -101,8 +228,11 @@ class PlayerBoard{
     this.timeEl = panel.querySelector('.time')
     this.nameInput = panel.querySelector('.name')
     this.resultEl = panel.querySelector('.result')
+    this.hintBox = panel.querySelector('.help-box')
     panel.querySelector('.btn-pause').addEventListener('click',()=>this.pause())
     panel.querySelector('.btn-reset').addEventListener('click',()=>this.resetBoard())
+    panel.querySelector('.btn-hint').addEventListener('click',()=>this.showHint())
+    panel.querySelector('.btn-solve').addEventListener('click',()=>this.showSolutionSteps())
   }
   resetBoard(){
     // default solved position: 1..15 then blank (0) at last position
@@ -112,6 +242,9 @@ class PlayerBoard{
     this.timer.reset(); this.timeEl.textContent='00:00'
     this.render()
     this.resultEl.textContent=''
+    this.hintedTileValue = null
+    this.suggestedPath = null
+    if(this.hintBox) this.hintBox.textContent = ''
   }
   shuffleStart(){
     // deprecated per-player shuffle; keep for compatibility
@@ -120,6 +253,9 @@ class PlayerBoard{
     this.moves=0; this.movesEl.textContent='0'
     this.timer.reset(); this.timeEl.textContent='00:00'
     this.started=false; this.active=false
+    this.hintedTileValue = null
+    this.suggestedPath = null
+    if(this.hintBox) this.hintBox.textContent = ''
     this.render()
   }
   render(){
@@ -162,6 +298,14 @@ class PlayerBoard{
         }
       }
     })
+    // apply hint visual if requested
+    if(this.hintedTileValue!==undefined && this.hintedTileValue!==null){
+      this.boardEl.querySelectorAll('.tile').forEach(t=>{
+        if(t.dataset.value == String(this.hintedTileValue)){
+          t.style.boxShadow = '0 0 0 4px rgba(255,165,0,0.9)'
+        }
+      })
+    }
   }
   onTileClick(idx){
     // allow clicking to start or resume the timer
@@ -177,16 +321,103 @@ class PlayerBoard{
     const blankIdx = this.arr.indexOf(0)
     const neighbors = this.getNeighbors(blankIdx)
     if(neighbors.includes(idx)){
-      [this.arr[blankIdx],this.arr[idx]]=[this.arr[idx],this.arr[blankIdx]]
+      // ensure board is valid
+      if(!Array.isArray(this.arr)){
+        console.error('Board array invalid in onTileClick', this.arr)
+        return
+      }
+      // record which tile value is being moved into the blank
+      const movedTile = this.arr[idx]
+      // safe swap
+      const tmp = this.arr[idx]
+      this.arr[idx] = this.arr[blankIdx]
+      this.arr[blankIdx] = tmp
       this.moves++
       this.movesEl.textContent = String(this.moves)
       if(!this.started){ this.timer.start(); this.started=true }
       // tactile feedback only
       try{ if(navigator.vibrate) navigator.vibrate(12) }catch(e){}
+      // if user followed the suggested step, advance the suggestion
+      if(this.suggestedPath && this.suggestedPath.length && this.suggestedPath[0] === movedTile){
+        this.suggestedPath.shift()
+        this.hintedTileValue = this.suggestedPath.length? this.suggestedPath[0] : null
+        if(this.suggestedPath.length){
+          this.hintBox.textContent = this.suggestedPath.join(' → ')
+        } else {
+          this.hintBox.textContent = 'Solved (or no remaining suggested steps)'
+        }
+      }
       this.render()
       if(this.isSolved()) this.onWin()
     }
   }
+
+    showHint(){
+    this.hintBox.textContent = 'Solving...'
+    setTimeout(()=>{
+      try{
+        const res = solvePuzzle(this.arr, 200000)
+        if(res.error){
+          if(res.error==='limit'){
+                if(res.partial && res.partial.length){
+                  this.suggestedPath = res.partial.slice()
+                  this.hintedTileValue = this.suggestedPath[0]
+                  this.hintBox.textContent = `Partial (limit): ${this.suggestedPath.join(' → ')}`
+                  this.render()
+                } else {
+                  this.hintBox.textContent = 'No result (limit reached)'
+                }
+          } else this.hintBox.textContent = 'No solution found'
+          return
+        }
+        if(!res.path || !res.path.length){
+          this.hintBox.textContent = 'Already solved'
+          return
+        }
+        this.suggestedPath = res.path.slice()
+        const nextTile = this.suggestedPath[0]
+        this.hintedTileValue = nextTile
+        this.hintBox.textContent = `Click tile ${nextTile}`
+        this.render()
+      }catch(e){
+        this.hintBox.textContent = 'Solver error'
+        console.error(e)
+      }
+    },10)
+    }
+
+    showSolutionSteps(){
+      this.hintBox.textContent = 'Solving...'
+      setTimeout(()=>{
+        try{
+          const res = solvePuzzle(this.arr, 200000)
+          if(res.error){
+            if(res.error==='limit'){
+              if(res.partial && res.partial.length){
+                this.suggestedPath = res.partial.slice()
+                this.hintedTileValue = this.suggestedPath[0]
+                this.hintBox.textContent = `Partial (limit): ${this.suggestedPath.join(' → ')}`
+                this.render()
+              } else {
+                this.hintBox.textContent = 'No result (limit reached)'
+              }
+            } else this.hintBox.textContent = 'No solution found'
+            return
+          }
+          if(!res.path || !res.path.length){
+            this.hintBox.textContent = 'Already solved'
+            return
+          }
+          this.suggestedPath = res.path.slice()
+          this.hintedTileValue = this.suggestedPath[0]
+          this.hintBox.textContent = this.suggestedPath.join(' → ')
+          this.render()
+        }catch(e){
+          this.hintBox.textContent = 'Solver error'
+          console.error(e)
+        }
+      },10)
+    }
   getNeighbors(i){
     const r=Math.floor(i/4), c=i%4
     const res=[]
