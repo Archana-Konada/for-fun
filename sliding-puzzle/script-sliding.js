@@ -35,13 +35,22 @@ function formatTime(sec){
 // audio disabled: sound effects removed per user request
 
 function isSolvable(arr){
-  // arr is length 16 with 0 as blank
+  // General solvability check. `arr` contains numbers 1..(n-1) and 0 for blank.
+  const size = arr.length
+  const width = Math.sqrt(size)
   let inv = 0
   const flat = arr.filter(n=>n!==0)
   for(let i=0;i<flat.length;i++) for(let j=i+1;j<flat.length;j++) if(flat[i]>flat[j]) inv++
-  const blankIndex = arr.indexOf(0)
-  const blankRowFromBottom = 4 - Math.floor(blankIndex/4)
-  return ((inv + blankRowFromBottom) % 2) === 0
+
+  if(width % 2 === 1){
+    // odd grid: solvable when inversions is even
+    return (inv % 2) === 0
+  } else {
+    // even grid: solvable when (inversions + blankRowFromBottom) is odd
+    const blankIndex = arr.indexOf(0)
+    const blankRowFromBottom = width - Math.floor(blankIndex/width)
+    return ((inv + blankRowFromBottom) % 2) === 1
+  }
 }
 
 function generateShuffle(){
