@@ -1,0 +1,74 @@
+:root{--bg:#fbfbf8;--card:#ffffff;--muted:#6b7280;--tile-2:#eee4da;--tile-4:#ede0c8;--tile-8:#f2b179;--tile-16:#f59563;--tile-32:#f67c5f;--tile-64:#f65e3b;--tile-128:#edcf72;--tile-256:#edcc61;--tile-512:#edc850;--tile-1024:#edc53f;--tile-2048:#edc22e}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(180deg,#fbfbf8,#f2f4f3);font-family:Inter,system-ui,Arial;color:#111;display:flex;align-items:center;justify-content:center}
+.game{width:92vw;max-width:420px;padding:20px}
+.gp-header{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;margin-bottom:18px;gap:8px}
+.title-row{display:flex;align-items:center;justify-content:center;gap:12px;width:100%}
+.title-row h1{margin:0;font-size:clamp(36px,10vw,120px);font-weight:900}
+.controls-row{margin:0;width:100%;display:flex;justify-content:center}
+.controls{display:flex;gap:12px;align-items:center;justify-content:center}
+
+/* Fun animated title */
+.title-row h1{
+  font-weight:800;
+  letter-spacing:0.6px;
+  background: linear-gradient(90deg,#0b1220 0%, #2b7cff 25%, #ef476f 50%, #ffd166 75%, #0b1220 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display:inline-block;
+  transform-origin: center;
+  animation: gradient-shift 6s linear infinite, title-bounce 1400ms ease-out 1;
+}
+
+@keyframes gradient-shift{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+@keyframes title-bounce{
+  0%{transform:translateY(-6px) scale(0.98)}
+  40%{transform:translateY(0) scale(1.02)}
+  100%{transform:translateY(0) scale(1)}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .title-row h1{animation:none}
+}
+.controls .score,.controls .best,.controls .timer{background:var(--card);padding:8px 10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);font-size:14px}
+.controls .best{background:linear-gradient(180deg,#fff,#fafafa)}
+.controls .timer{background:linear-gradient(180deg,#fff,#fafafa)}
+button#restart{padding:8px 12px;border-radius:8px;border:none;background:#2b7cff;color:#fff;cursor:pointer}
+.board{position:relative;background:linear-gradient(180deg,#efece7,#fff);padding:12px;border-radius:12px;display:grid;grid-template-columns:repeat(4,1fr);grid-gap:12px;min-height:360px}
+.board-wrap{position:relative}
+.title-row{display:flex;align-items:center;gap:12px}
+.title-badge{background:#ef476f;color:#fff;padding:6px 8px;border-radius:14px;font-weight:700;box-shadow:0 6px 16px rgba(0,0,0,0.12);font-size:13px}
+.title-badge span{margin-left:6px;font-weight:800}
+.cell{background:rgba(0,0,0,0.06);border-radius:8px;min-height:72px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#2b2b2b;font-size:22px}
+.tile{position:absolute;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#1c1c1c;transition:transform 150ms ease, top 150ms ease, left 150ms ease}
+.tile.spawn{animation:pop 160ms ease-out}
+.tile.merge{animation:merge-pop 220ms cubic-bezier(.2,.8,.2,1)}
+
+@keyframes pop{0%{transform:scale(0.2)}70%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes merge-pop{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
+.tile.n2{background:var(--tile-2)}
+.tile.n4{background:var(--tile-4)}
+.tile.n8{background:var(--tile-8);color:#fff}
+.tile.n16{background:var(--tile-16);color:#fff}
+.tile.n32{background:var(--tile-32);color:#fff}
+.tile.n64{background:var(--tile-64);color:#fff}
+.tile.n128{background:var(--tile-128)}
+.tile.n256{background:var(--tile-256)}
+.tile.n512{background:var(--tile-512)}
+.tile.n1024{background:var(--tile-1024)}
+.tile.n2048{background:var(--tile-2048)}
+.hint{font-size:12px;color:var(--muted);text-align:center;margin-top:12px}
+
+@media (max-width:420px){
+  .board{min-height:calc(92vw);grid-gap:10px;padding:10px}
+  .cell{min-height:calc((92vw - 10px*3 - 20px)/4);font-size:18px}
+  .title-row h1{font-size:clamp(44px,12vw,96px)}
+  .title-badge{font-size:12px;padding:5px 8px}
+}

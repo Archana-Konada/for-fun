@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>2048 — Number Puzzle</title>
+  <link rel="stylesheet" href="styles-2048.css">
+</head>
+<body>
+  <main class="game">
+    <header class="gp-header">
+      <div class="title-row">
+        <h1>2048</h1>
+        <div class="title-badge">Best <span id="best-badge">0</span></div>
+      </div>
+      <div class="controls-row">
+        <div class="controls">
+          <div class="score">Score: <span id="score">0</span></div>
+          <div class="timer">Time: <span id="time">00:00</span></div>
+          <button id="restart">Restart</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="board-wrap" style="position:relative">
+      <div class="board" id="board" aria-label="2048 board"></div>
+    </div>
+
+    <p class="hint">Use arrow keys or swipe to move tiles. Combine matching tiles to reach 2048.</p>
+  </main>
+
+  <script src="script-2048.js" defer></script>
+</body>
+</html>
