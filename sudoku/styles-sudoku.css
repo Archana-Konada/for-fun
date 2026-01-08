@@ -264,6 +264,18 @@ h1 {
     color: #084298;
 }
 
+/* Ensure match highlight overrides other state colors so user-entered
+   cells also show the purple 'match' background when applicable. */
+.sudoku-cell.match,
+.sudoku-cell.correct.match,
+.sudoku-cell.incorrect.match,
+.sudoku-cell.hint.match {
+    background: #667eea;
+    color: #fff;
+    font-weight: 800;
+    box-shadow: 0 6px 18px rgba(102,126,234,0.22);
+}
+
 /* Grid borders: draw thin internal lines using top/left borders,
    and thicker separators for 3x3 boxes using right/bottom borders.
    To avoid double-thickness, we remove the adjacent thin border where needed. */
