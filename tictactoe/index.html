@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tic Tac Toe</title>
+  <link rel="stylesheet" href="styles-tictactoe.css">
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>Tic Tac Toe</h1>
+      <p class="tag">A simple game — add names and pick icons</p>
+    </header>
+
+    <div class="top-row">
+    <section class="settings" aria-label="Player settings">
+      <div class="player-settings">
+        <div class="player">
+          <div class="player-row">
+            <label class="sr-only" for="p1-name">Player 1 name</label>
+            <input id="p1-name" class="name-input" type="text" placeholder="Player 1" value="Player 1">
+            <label class="sr-only" for="p1-icon">Player 1 icon</label>
+            <select id="p1-icon" class="icon-select">
+              <option value="X">X</option>
+              <option value="O">O</option>
+              <option value="❌">❌</option>
+              <option value="⭕">⭕</option>
+              <option value="✖️">✖️</option>
+              <option value="⭐">⭐</option>
+              <option value="🐱">🐱</option>
+              <option value="🐶">🐶</option>
+              <option value="🍀">🍀</option>
+              <option value="🔥">🔥</option>
+              <option value="💎">💎</option>
+              <option value="🎯">🎯</option>
+              <option value="❤️">❤️</option>
+              <option value="💚">💚</option>
+              <option value="💙">💙</option>
+              <option value="🐵">🐵</option>
+              <option value="🐼">🐼</option>
+              <option value="🦊">🦊</option>
+              <option value="🍎">🍎</option>
+              <option value="🍕">🍕</option>
+              <option value="☀️">☀️</option>
+              <option value="🌙">🌙</option>
+              <option value="🎵">🎵</option>
+              <option value="⚽">⚽</option>
+              <option value="🏀">🏀</option>
+              <option value="🎲">🎲</option>
+              <option value="👑">👑</option>
+              <option value="🚀">🚀</option>
+            </select>
+          </div>
+          </div>
+        <div class="player">
+          <div class="player-row">
+            <label class="sr-only" for="p2-name">Player 2 name</label>
+            <input id="p2-name" class="name-input" type="text" placeholder="Player 2" value="Player 2">
+            <label class="sr-only" for="p2-icon">Player 2 icon</label>
+            <select id="p2-icon" class="icon-select">
+              <option value="O">O</option>
+              <option value="X">X</option>
+              <option value="⭕">⭕</option>
+              <option value="❌">❌</option>
+              <option value="✖️">✖️</option>
+              <option value="⭐">⭐</option>
+              <option value="🐱">🐱</option>
+              <option value="🐶">🐶</option>
+              <option value="🍀">🍀</option>
+              <option value="🔥">🔥</option>
+              <option value="💎">💎</option>
+              <option value="🎯">🎯</option>
+              <option value="❤️">❤️</option>
+              <option value="💚">💚</option>
+              <option value="💙">💙</option>
+              <option value="🐵">🐵</option>
+              <option value="🐼">🐼</option>
+              <option value="🦊">🦊</option>
+              <option value="🍎">🍎</option>
+              <option value="🍕">🍕</option>
+              <option value="☀️">☀️</option>
+              <option value="🌙">🌙</option>
+              <option value="🎵">🎵</option>
+              <option value="⚽">⚽</option>
+              <option value="🏀">🏀</option>
+              <option value="🎲">🎲</option>
+              <option value="👑">👑</option>
+              <option value="🚀">🚀</option>
+            </select>
+          </div>
+          </div>
+        </div>
+      <div class="controls">
+        <div id="status" aria-live="polite">Current: Player 1 (X)</div>
+        <div class="buttons">
+          <button id="apply">Start / Apply</button>
+          <button id="restart">Restart</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="scoreboard" aria-label="Scoreboard">
+      <h2 class="score-title">Scoreboard</h2>
+      <div class="scores">
+        <div class="score-item"><strong id="p1-label">Player 1</strong>: <span id="p1-score">0</span></div>
+        <div class="score-item"><strong id="p2-label">Player 2</strong>: <span id="p2-score">0</span></div>
+        <div class="score-item"><strong>Draws</strong>: <span id="draw-score">0</span></div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;justify-content:center">
+        <button id="reset-scores">Reset Scores</button>
+      </div>
+    </section>
+    </div>
+
+    <div class="board-wrapper">
+      <div class="board" role="grid" aria-label="Tic Tac Toe">
+        <div class="cell" data-index="0" role="button" tabindex="0"></div>
+        <div class="cell" data-index="1" role="button" tabindex="0"></div>
+        <div class="cell" data-index="2" role="button" tabindex="0"></div>
+        <div class="cell" data-index="3" role="button" tabindex="0"></div>
+        <div class="cell" data-index="4" role="button" tabindex="0"></div>
+        <div class="cell" data-index="5" role="button" tabindex="0"></div>
+        <div class="cell" data-index="6" role="button" tabindex="0"></div>
+        <div class="cell" data-index="7" role="button" tabindex="0"></div>
+        <div class="cell" data-index="8" role="button" tabindex="0"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="script-tictactoe.js" defer></script>
+</body>
+</html>

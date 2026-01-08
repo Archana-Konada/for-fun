@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>For Fun — Games</title>
+  <style>
+    :root{--bg:#071021;--card:#0b1220;--muted:#9aa4b2;--accent:#2b7cff}
+    body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#071021,#041024);color:#e6eef8;min-height:100vh;display:flex;align-items:center;justify-content:center}
+    .wrap{width:92vw;max-width:920px;padding:28px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    h1{margin:0;font-size:20px}
+    p.lead{margin:6px 0 0;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:18px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:16px;border-radius:12px;box-shadow:0 12px 30px rgba(2,6,23,0.6);transition:transform .12s ease,box-shadow .12s ease}
+    .card:hover{transform:translateY(-6px);box-shadow:0 20px 44px rgba(2,6,23,0.7)}
+    .card h3{margin:0 0 6px 0}
+    .card p{margin:0;color:var(--muted);font-size:14px}
+    .actions{margin-top:12px;display:flex;gap:8px}
+    .btn{padding:8px 12px;border-radius:8px;border:none;background:var(--accent);color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+    .muted{background:#4b5568}
+    footer{margin-top:18px;color:var(--muted);font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>For Fun — Games</h1>
+        <p class="lead">Pick a game and have fun. Everything runs locally in your browser.</p>
+      </div>
+      <div>
+        <a class="btn" href="README.md">Repository Readme</a>
+      </div>
+    </header>
+
+    <main>
+      <div class="grid">
+        <section class="card">
+          <h3>Sliding Puzzle</h3>
+          <p>Classic 15-style sliding puzzle with an interactive board.</p>
+          <div class="actions">
+            <a class="btn" href="sliding-puzzle/puzzle.html">Open</a>
+            <a class="btn muted" href="sliding-puzzle/README.md">Info</a>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3>Sudoku</h3>
+          <p>Play Sudoku in the browser — generate and solve puzzles.</p>
+          <div class="actions">
+            <a class="btn" href="sudoku/index.html">Open</a>
+            <a class="btn muted" href="sudoku/README.md">Info</a>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3>Tic Tac Toe</h3>
+          <p>Two-player Tic Tac Toe with player icons, colors, and local scoreboard.</p>
+          <div class="actions">
+            <a class="btn" href="tictactoe/index.html">Open</a>
+            <a class="btn muted" href="tictactoe/README.md">Info</a>
+          </div>
+        </section>
+      </div>
+
+      <footer>
+        Local links open the pages shipped in this repository. Scores in games are stored per-device (browser localStorage).
+      </footer>
+    </main>
+  </div>
+</body>
+</html>
