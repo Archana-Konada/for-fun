@@ -478,11 +478,13 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(sharedStart) boards.forEach(b=>b.applyShared(sharedStart, false))
   }
 
-  // create players when the player count input changes
-  playerCountEl.addEventListener('input',()=>{
-    const n = Math.min(6, Math.max(1, parseInt(playerCountEl.value||1)))
-    playerCountEl.value = n
-    createPlayers(n)
+  // create players when the player count input changes (use change to avoid mobile spinner glitches)
+  playerCountEl.addEventListener('change',()=>{
+    let val = parseInt(playerCountEl.value, 10)
+    if(Number.isNaN(val)) val = 1
+    val = Math.min(6, Math.max(1, val))
+    playerCountEl.value = String(val)
+    createPlayers(val)
   })
 
   // universal shuffle: create one solvable puzzle and apply to all players
